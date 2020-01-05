@@ -18,7 +18,7 @@ class Board:
         # Label for showing message about result of game
         self.alert = None
         # Colors for cells background
-        self.cellBg = ('black','white')
+        self.cellBg = ('bisque', 'brown')
         # Drawing Board
         self.drawBoard()
         # Starting first game
@@ -74,13 +74,16 @@ class Figure:
 
     def Draw(self):
         img = Image.open('resources/{}/{}.png'.format(self.side, self.kind))
+        # Resizing, so it will fit for cell size on any screens
+        size = self.board.cellSize
+        img = img.resize((size,size), Image.ANTIALIAS)
         self.img = ImageTk.PhotoImage(img)
         self.board.canvas.create_image(self.x,self.y,image = self.img, anchor=tk.NW)
 
 Board = Board()
 
 # Just for test now
-f = Figure(Board, 0,0,20,20)
+f = Figure(Board, 0,0,0,0)
 f.Draw()
 
 # Since we didn't render all objects inside Board initializing
