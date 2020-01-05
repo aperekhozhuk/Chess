@@ -134,8 +134,23 @@ class Figure:
     # Undoing of activating for activated figure
     def Deactivate(self):
         self.Activate(-1)
+
+    # Change position from (self.x, self.y) to new (x,y)
+    def SetPosition(self, x, y):
+        cellSize = self.player.board.cellSize
+        # Changing position on canvas
+        self.player.board.canvas.coords(self.id, cellSize * x, cellSize * y)
+        # Update dictionary of figures: create new key for this Figure and delete old one
+        self.player.figures[(x,y)] = self
+        del self.player.figures[(self.x, self.y)]
+        # Update cooordinates
+        self.x = x
+        self.y = y
+
 Board = Board()
 
 # Since we didn't render all objects inside Board initializing
 # And now we just testing - we need to run mainloop outside the Board class
+
+#Board.Player2.figures[(0,0)].SetPosition(3,3)
 Board.root.mainloop()
