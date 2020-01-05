@@ -17,7 +17,7 @@ class Board:
         # Label for showing message about result of game
         self.alert = None
         # Colors for cells background
-        self.cellBg = ('#f9efeb','#c65c39')
+        self.cellBg = ('black','white')
         # Drawing Board
         self.drawBoard()
         # Starting first game
@@ -58,4 +58,15 @@ class Board:
         j = y // self.cellSize
         return i, j
 
+class Figure:
+    # Initializating of figure, it takes kind of figure and side, and coordinates on Board
+    # Kind: { 0 - Infantry, 1 - Tower, 2 - Horse, 3 - Officer, 4 - Queen, 5 - King }
+    # Side: 0 - White, 1 - Black. White - means, side which goes first
+    def __init__(self, kind, side, x, y):
+        self.kind = kind
+        self.side = side
+        self.Draw()
+
+    def Draw():
+        pass
 Board = Board()
