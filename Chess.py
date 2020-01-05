@@ -127,6 +127,13 @@ class Figure:
         self.img = ImageTk.PhotoImage(img)
         self.id = self.player.board.canvas.create_image(self.x * size,self.y * size,image = self.img, anchor=tk.NW)
 
+    # Litle shifting, it indicates that this figure is active now
+    def Activate(self, p = 1):
+        self.player.board.canvas.move(self.id, 0, p * (2 * self.player.side - 1) * self.player.board.cellSize // 5)
+
+    # Undoing of activating for activated figure
+    def Deactivate(self):
+        self.Activate(-1)
 Board = Board()
 
 # Since we didn't render all objects inside Board initializing
