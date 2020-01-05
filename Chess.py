@@ -21,6 +21,9 @@ class Board:
         self.cellBg = ('bisque', 'brown')
         # Drawing Board
         self.drawBoard()
+        # Global game vars
+        self.Player1 = None
+        self.Player2 = None
         # Starting first game
         self.NewGame()
         # Starting window process. Upd: to early to start mainloop. Firstly we need to render all objects
@@ -44,6 +47,10 @@ class Board:
     
     # Logic for restarting or running first game
     def NewGame(self):
+        # If first game happened - clean Board after it
+        if self.Player1:
+            self.Player1.CleanFigures()
+            self.Player2.CleanFigures()
         self.Player1 = Player(self,0)
         self.Player2 = Player(self,1)
 
@@ -89,6 +96,11 @@ class Player:
         self.figures[(3, j)] = Figure(self, 4, self.side, 3, j)
         # Drawing of King
         self.figures[(4, j)] = Figure(self, 5, self.side, 4, j)
+
+    # Cleans all Players's Figures from Board
+    def CleanFigures(self):
+        for key, figure in self.figures.items():
+            self.board.canvas.delete(figure.id)
 
 class Figure:
     # Initializating of figure, it takes kind of figure and side, and coordinates on Board
