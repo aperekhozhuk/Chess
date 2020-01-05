@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 
 class Board:
     def __init__(self):
@@ -22,8 +23,8 @@ class Board:
         self.drawBoard()
         # Starting first game
         self.NewGame()
-        # Starting window process
-        self.root.mainloop()
+        # Starting window process. Upd: to early to start mainloop. Firstly we need to render all objects
+        #self.root.mainloop()
     
     # Draws all cells. Actually runs only 1 timer per program executing
     def drawBoard(self):
@@ -39,7 +40,6 @@ class Board:
     def Click(self):
         def _Click(event):
             i, j = self.GetCell(event.x, event.y)
-            print(i,j)
         return _Click
     
     # Logic for restarting or running first game
@@ -62,11 +62,27 @@ class Figure:
     # Initializating of figure, it takes kind of figure and side, and coordinates on Board
     # Kind: { 0 - Infantry, 1 - Tower, 2 - Horse, 3 - Officer, 4 - Queen, 5 - King }
     # Side: 0 - White, 1 - Black. White - means, side which goes first
-    def __init__(self, kind, side, x, y):
+    def __init__(self, board, kind, side, x, y):
+        self.board = board
         self.kind = kind
         self.side = side
+        self.x = x
+        self.y = y
+        # We need to store image, else garbage collector will clean it
+        self.img = None
         self.Draw()
 
-    def Draw():
-        pass
+    def Draw(self):
+        img = Image.open('resources/{}/{}.png'.format(self.side, self.kind))
+        self.img = ImageTk.PhotoImage(img)
+        self.board.canvas.create_image(self.x,self.y,image = self.img, anchor=tk.NW)
+
 Board = Board()
+
+# Just for test now
+f = Figure(Board, 0,0,20,20)
+f.Draw()
+
+# Since we didn't render all objects inside Board initializing
+# And now we just testing - we need to run mainloop outside the Board class
+Board.root.mainloop()
