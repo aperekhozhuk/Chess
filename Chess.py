@@ -24,6 +24,9 @@ class Board:
         # Global game vars
         self.Player1 = None
         self.Player2 = None
+        self.Players = (0,1)
+        self.ActivePlayer = None
+        self.ActiveFigure = None
         # Starting first game
         self.NewGame()
         # Starting window process. Upd: to early to start mainloop. Firstly we need to render all objects
@@ -43,6 +46,12 @@ class Board:
     def Click(self):
         def _Click(event):
             i, j = self.GetCell(event.x, event.y)
+            if (i,j) in self.Players[self.ActivePlayer].figures:
+                if self.ActiveFigure:
+                    self.Players[self.ActivePlayer].figures[self.ActiveFigure].Deactivate()
+                self.Players[self.ActivePlayer].figures[(i,j)].Activate()
+                self.ActiveFigure = (i,j)
+
         return _Click
     
     # Logic for restarting or running first game
@@ -53,6 +62,9 @@ class Board:
             self.Player2.CleanFigures()
         self.Player1 = Player(self,0)
         self.Player2 = Player(self,1)
+        self.Players = (self.Player1, self.Player2)
+        self.ActivePlayer = 0
+        self.ActiveFigure = None
 
     # Wrapper, event handler, that runs NewGame function, when Enter pressed
     def NewGameEventHandler(self):
@@ -128,8 +140,8 @@ class Figure:
         self.id = self.player.board.canvas.create_image(self.x * size,self.y * size,image = self.img, anchor=tk.NW)
 
     # Litle shifting, it indicates that this figure is active now
-    def Activate(self, p = 1):
-        self.player.board.canvas.move(self.id, 0, p * (2 * self.player.side - 1) * self.player.board.cellSize // 5)
+    def Activate(self, p=1):
+        self.player.board.canvas.move(self.id, 0, p * (2 * self.player.side - 1) * (self.player.board.cellSize // 5))
 
     # Undoing of activating for activated figure
     def Deactivate(self):
