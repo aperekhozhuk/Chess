@@ -45,13 +45,26 @@ class Board:
     # Invokes, when user clicks on board
     def Click(self):
         def _Click(event):
+            # Calculate position of clicked Cell
             i, j = self.GetCell(event.x, event.y)
+            # If we cliced on one of Active Player's figures:
             if (i,j) in self.Players[self.ActivePlayer].figures:
+                # If is previously selected figure - we need to unselect it
                 if self.ActiveFigure:
                     self.Players[self.ActivePlayer].figures[self.ActiveFigure].Deactivate()
+                # Activate selected figure
                 self.Players[self.ActivePlayer].figures[(i,j)].Activate()
                 self.ActiveFigure = (i,j)
-
+            else:
+                # So, we clicked on empty cell or cell, located by enemy
+                # We can continue, only in case if some figure was selected
+                if self.ActiveFigure:
+                    # Here must be a logic which will define:
+                    # If Active figure can make move to (i,j) position - then run next block, else return for exit from function
+                    self.Players[self.ActivePlayer].figures[self.ActiveFigure].SetPosition(i, j)
+                    # Change Active Player to opposite
+                    self.ActivePlayer = abs(1 - self.ActivePlayer)
+                    self.ActiveFigure = None
         return _Click
     
     # Logic for restarting or running first game
