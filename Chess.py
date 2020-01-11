@@ -55,13 +55,21 @@ class Board:
                 img = img.resize((size,size), Image.ANTIALIAS)
                 self.resources[side].append(ImageTk.PhotoImage(img))
 
+    # Returns 1 if (x,y) cell allocated by Active Player, -1 - if unActive, 0 - if cell is empty
+    def GetAllocation(self, x, y):
+        if (x, y) in self.Players[self.ActivePlayer].figures:
+            return 1
+        if (x,y) in self.GetUnActivePlayer().figures:
+            return -1
+        return 0
+
     # Invokes, when user clicks on board
     def Click(self):
         def _Click(event):
             # Calculate position of clicked Cell
             i, j = self.GetCell(event.x, event.y)
             # If we cliced on one of Active Player's figures:
-            if (i,j) in self.Players[self.ActivePlayer].figures:
+            if self.GetAllocation(i, j) == 1:
                 # If is previously selected figure - we need to unselect it
                 if self.ActiveFigure:
                     self.Players[self.ActivePlayer].figures[self.ActiveFigure].Deactivate()
