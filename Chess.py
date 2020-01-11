@@ -63,6 +63,9 @@ class Board:
             return -1
         return 0
 
+    def MoveIsPossible(self):
+        return True
+
     # Invokes, when user clicks on board
     def Click(self):
         def _Click(event):
@@ -80,12 +83,12 @@ class Board:
                 # So, we clicked on empty cell or cell, located by enemy
                 # We can continue, only in case if some figure was selected
                 if self.ActiveFigure:
-                    # Here must be a logic which will define:
-                    # If Active figure can make move to (i,j) position - then run next block, else return for exit from function
-                    self.Players[self.ActivePlayer].figures[self.ActiveFigure].SetPosition(i, j)
-                    # Change Active Player to opposite
-                    self.ActivePlayer = abs(1 - self.ActivePlayer)
-                    self.ActiveFigure = None
+                    # If Active figure can make move to (i,j) position - then run next block
+                    if self.MoveIsPossible():
+                        self.Players[self.ActivePlayer].figures[self.ActiveFigure].SetPosition(i, j)
+                        # Change Active Player to opposite
+                        self.ActivePlayer = abs(1 - self.ActivePlayer)
+                        self.ActiveFigure = None
         return _Click
     
     # Logic for restarting or running first game
