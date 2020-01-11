@@ -19,8 +19,12 @@ class Board:
         self.alert = None
         # Colors for cells background
         self.cellBg = ('bisque', 'brown')
+        # Images of figures
+        self.resources = [[], []]
         # Drawing Board
         self.drawBoard()
+        # Loading images
+        self.LoadResources()
         # Global game vars
         self.Player1 = None
         self.Player2 = None
@@ -42,6 +46,15 @@ class Board:
                 y2 = y1 + self.cellSize
                 self.canvas.create_rectangle(x1,y1,x2,y2,fill = self.cellBg[(i + j)%2])
     
+    def LoadResources(self):
+        size = self.cellSize
+        for side in [0,1]:
+            for kind in [0,1,2,3,4,5]:
+                img = Image.open('resources/{}/{}.png'.format(side, kind))
+                # Resizing, so it will fit for cell size on any screens
+                img = img.resize((size,size), Image.ANTIALIAS)
+                self.resources[side].append(ImageTk.PhotoImage(img))
+
     # Invokes, when user clicks on board
     def Click(self):
         def _Click(event):
@@ -142,19 +155,14 @@ class Figure:
         # Figure coordinates. It means cell coordinates, tot pixel
         self.x = x
         self.y = y
-        # We need to store image, else garbage collector will clean it
-        self.img = None
         # Id for canvas
         self.id = None
         self.Draw()
 
     def Draw(self):
-        img = Image.open('resources/{}/{}.png'.format(self.side, self.kind))
-        # Resizing, so it will fit for cell size on any screens
+        img = self.player.board.resources[self.side][self.kind]
         size = self.player.board.cellSize
-        img = img.resize((size,size), Image.ANTIALIAS)
-        self.img = ImageTk.PhotoImage(img)
-        self.id = self.player.board.canvas.create_image(self.x * size,self.y * size,image = self.img, anchor=tk.NW)
+        self.id = self.player.board.canvas.create_image(self.x * size,self.y * size,image = img, anchor=tk.NW)
 
     # Litle shifting, it indicates that this figure is active now
     def Activate(self, p=1):
