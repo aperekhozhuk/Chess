@@ -91,6 +91,10 @@ class Board:
         j = y // self.cellSize
         return i, j
 
+    # Returns object of unactive player
+    def GetUnActivePlayer(self):
+        return self.Players[abs(1 - self.ActivePlayer)]
+
 class Player:
     def __init__(self, board, side):
         # I think it's better from OOP conceptions:
@@ -163,6 +167,10 @@ class Figure:
     # Change position from (self.x, self.y) to new (x,y)
     def SetPosition(self, x, y):
         cellSize = self.player.board.cellSize
+        # If Cell allocated by enemy figure - remove it
+        opponent = self.player.board.GetUnActivePlayer()
+        if (x,y) in opponent.figures:
+            opponent.figures[(x,y)].Remove()
         # Changing position on canvas
         self.player.board.canvas.coords(self.id, cellSize * x, cellSize * y)
         # Update dictionary of figures: create new key for this Figure and delete old one
@@ -171,6 +179,11 @@ class Figure:
         # Update cooordinates
         self.x = x
         self.y = y
+
+    # Removes Figure from canvas and from Player's figures list
+    def Remove(self):
+        self.player.board.canvas.delete(self.id)
+        del self.player.figures[(self.x, self.y)]
 
 Board = Board()
 
