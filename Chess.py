@@ -123,8 +123,11 @@ class Player:
         # - Figure belong to player - so Figure has Player field, and can comunicate with him
         # - Also Figure can communicate with Board - through Player.
         # In my opinion, such Ierarchy more natural
+        # side: 0 - white player, who goes first, 1 - black
         self.side = side
         self.board = board
+        # Needed for ability of infantry to make longer first step
+        self.isFirstStepDone = False
         self.figures = {}
         self.SetFigures()
 
@@ -195,6 +198,8 @@ class Figure:
         # Update cooordinates
         self.x = x
         self.y = y
+        # Tell that Player already made first step
+        self.player.isFirstStepDone = True
 
     # Removes Figure from canvas and from Player's figures list
     def Remove(self):
