@@ -63,8 +63,99 @@ class Board:
             return -1
         return 0
 
-    def MoveIsPossible(self):
-        return True
+    # Checks, if ActiveFigure can make move to (x2,y2) cell
+    # Note that we don't to check if (x2, y2) allocated by active player's,
+    # Bcs if (x2, y2) allocated by active player and was clicked - it selected as active figure,
+    # it property provided by Click method
+    def MoveIsPossible(self, x2, y2):
+        # Player and Figure, which tries to move
+        player = self.Players[self.ActivePlayer]
+        figure = player.figures[self.ActiveFigure]
+        # Figure position
+        x1 = figure.x
+        y1 = figure.y
+        # Infantry case
+        if figure.kind == 0:
+            dy = 2 * figure.side - 1
+            # Forward direction case
+            if x1 == x2:
+                # If move forward on one cell or on two cells on first step
+                if (y2 - y1 == dy) or ((y2 - y1 == 2 * dy) and (not figure.isFirstStepDone)):
+                    return self.GetAllocation(x2, y2) == 0
+                return False
+            # Beating enemy case
+            if abs(x1 - x2) == 1:
+                # If figure moves forward
+                if (y2 - y1 == dy):
+                    # If cell really allocated by enemy
+                    return self.GetAllocation(x2, y2) == -1
+                return False
+            return False
+        # Tower case
+        if figure.kind == 1:
+            if x1 == x2:
+                # We must have only points between (x1,y1) and (x2, y2)
+                # Because (x1, y1) - for sure allocated by active player's figure and lies on board,
+                # (x2,y2) - for sure lies on board and is allocated by passive player's figure
+                # or empty - it's guaranted by Click method
+                if (y2 > y1):
+                    start = y1 + 1
+                    end = y2
+                else:
+                    start = y2 + 1
+                    end = y1
+                # If between (x1,y1) and (x2,y2) exits not epty cell - return False
+                for j in range(start, end):
+                    if self.GetAllocation(x1, j) != 0:
+                        return False
+                return True
+            if y1 == y2:
+                if (x2 > x1):
+                    start = x1 + 1
+                    end = x2
+                else:
+                    start = x2 + 1
+                    end = x1
+                # If between (x1,y1) and (x2,y2) exits not epty cell - return False
+                for i in range(start, end):
+                    if self.GetAllocation(i, y1) != 0:
+                        return False
+                return True
+            return False
+        # Horse case
+        if figure.kind == 2:
+            dx = abs(x1 - x2)
+            dy = abs(y1 - y2)
+            return (dx and dy and (dx + dy == 3))
+        # Officer case
+        if figure.kind == 3:
+            # If moving isn't diagonally
+            if abs(x1 - x2) != abs(y1 - y2):
+                return False
+            # Need to check if line between (x1, y1) and (x2, y2) is free, as in case with tower
+            # Vectors of moving from (x1, y1) and (x2, y2)
+            vx = 1 if x2 > x1 else -1
+            vy = 1 if y2 > y1 else -1
+            x = x1
+            y = y1
+            for i in range(1, abs(x1 - x2)):
+                # Next point on line
+                x += vx
+                y += vy
+                # If point isn't empty: return false
+                if self.GetAllocation(x, y) != 0:
+                    return False
+            return True
+        # Queen case
+        if figure.kind == 4:
+            if (x1 == x2) or (y1 == y2) or (abs(x1 - x2) == abs(y1 - y2)):
+                return self.CheckLine(x1, y1, x2, y2)
+            return False
+        # King case
+        if figure.kind == 5:
+            return (abs(x1 - x2) <= 1 and abs(y1 -y2) <= 1)
+        # Actually, this return needless, just for code culture
+        return False
 
     # Invokes, when user clicks on board
     def Click(self):
@@ -84,13 +175,46 @@ class Board:
                 # We can continue, only in case if some figure was selected
                 if self.ActiveFigure:
                     # If Active figure can make move to (i,j) position - then run next block
-                    if self.MoveIsPossible():
+                    if self.MoveIsPossible(i, j):
                         self.Players[self.ActivePlayer].figures[self.ActiveFigure].SetPosition(i, j)
                         # Change Active Player to opposite
                         self.ActivePlayer = abs(1 - self.ActivePlayer)
                         self.ActiveFigure = None
         return _Click
-    
+
+    # Return True if line between (x1, y1) and (x2, y2) defined correctly and is empty
+    def CheckLine(self, x1, y1, x2, y2):
+        if x1 == x2:
+            vy = 1 if y2 > y1 else -1
+            x = x1
+            y = y1
+            for i in range(1, abs(y1 - y2)):
+                y = y + vy
+                if self.GetAllocation(x,y) != 0:
+                    return False
+            return True
+        if y1 == y2:
+            vx = 1 if x2 > x1 else -1
+            x = x1
+            y = y1
+            for i in range(1, abs(x1 - x2)):
+                x = x + vx
+                if self.GetAllocation(x,y) != 0:
+                    return False
+            return True
+        if abs(x1 - x2) == abs(y1 - y2):
+            vx = 1 if x2 > x1 else -1
+            vy = 1 if y2 > y1 else -1
+            x = x1
+            y = y1
+            for i in range(1, abs(x1 - x2)):
+                x = x + vx
+                y = y + vy
+                if self.GetAllocation(x,y) != 0:
+                    return False
+            return True
+        return False
+
     # Logic for restarting or running first game
     def NewGame(self):
         # If first game happened - clean Board after it
@@ -129,8 +253,6 @@ class Player:
         # side: 0 - white player, who goes first, 1 - black
         self.side = side
         self.board = board
-        # Needed for ability of infantry to make longer first step
-        self.isFirstStepDone = False
         self.figures = {}
         self.SetFigures()
 
@@ -166,6 +288,8 @@ class Figure:
         self.player = player
         self.kind = kind
         self.side = side
+        # Needed for ability of infantry to make longer first step
+        self.isFirstStepDone = False
         # Figure coordinates. It means cell coordinates, tot pixel
         self.x = x
         self.y = y
@@ -202,7 +326,7 @@ class Figure:
         self.x = x
         self.y = y
         # Tell that Player already made first step
-        self.player.isFirstStepDone = True
+        self.isFirstStepDone = True
 
     # Removes Figure from canvas and from Player's figures list
     def Remove(self):
