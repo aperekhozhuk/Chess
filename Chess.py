@@ -17,6 +17,11 @@ class Board:
         self.root.bind('<Return>',self.NewGameEventHandler())
         # Label for showing message about result of game
         self.alert = None
+        # Mark for active figure
+        self.mark_id = None
+        # mark color and width
+        self.mark_color = 'blue'
+        self.mark_width = self.cellSize // 20
         # Colors for cells background
         self.cellBg = ('bisque', 'brown')
         # Images of figures
@@ -266,13 +271,16 @@ class Figure:
         size = self.player.board.cellSize
         self.id = self.player.board.canvas.create_image(self.x * size,self.y * size,image = img, anchor=tk.NW)
 
-    # Litle shifting, it indicates that this figure is active now
-    def Activate(self, p=1):
-        self.player.board.canvas.move(self.id, 0, p * (2 * self.player.side - 1) * (self.player.board.cellSize // 5))
+    # Add highliting for selected figure
+    def Activate(self):
+        board = self.player.board
+        size = board.cellSize
+        board.mark = board.canvas.create_rectangle(self.x * size, self.y * size,
+            (self.x + 1) * size, (self.y + 1) * size, outline = board.mark_color, width = board.mark_width)
 
-    # Undoing of activating for activated figure
+    # Remove highliting for activated figure
     def Deactivate(self):
-        self.Activate(-1)
+        self.player.board.canvas.delete(self.player.board.mark_id)
 
     # Change position from (self.x, self.y) to new (x,y)
     def SetPosition(self, x, y):
@@ -291,6 +299,8 @@ class Figure:
         self.y = y
         # Tell that Player already made first step
         self.isFirstStepDone = True
+        # Remove highlighting
+        self.Deactivate()
 
     # Removes Figure from canvas and from Player's figures list
     def Remove(self):
