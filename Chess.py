@@ -35,7 +35,7 @@ class Board:
         self.NewGame()
         # Starting window process. Upd: to early to start mainloop. Firstly we need to render all objects
         #self.root.mainloop()
-    
+
     # Draws all cells. Actually runs only 1 timer per program executing
     def drawBoard(self):
         for i in range(8):
@@ -45,7 +45,7 @@ class Board:
                 x2 = x1 + self.cellSize
                 y2 = y1 + self.cellSize
                 self.canvas.create_rectangle(x1,y1,x2,y2,fill = self.cellBg[(i + j)%2])
-    
+
     def LoadResources(self):
         size = self.cellSize
         for side in [0,1]:
@@ -93,35 +93,8 @@ class Board:
             return False
         # Tower case
         if figure.kind == 1:
-            if x1 == x2:
-                # We must have only points between (x1,y1) and (x2, y2)
-                # Because (x1, y1) - for sure allocated by active player's figure and lies on board,
-                # (x2,y2) - for sure lies on board and is allocated by passive player's figure
-                # or empty - it's guaranted by Click method
-                if (y2 > y1):
-                    start = y1 + 1
-                    end = y2
-                else:
-                    start = y2 + 1
-                    end = y1
-                # If between (x1,y1) and (x2,y2) exits not epty cell - return False
-                for j in range(start, end):
-                    if self.GetAllocation(x1, j) != 0:
-                        return False
-                return True
-            if y1 == y2:
-                if (x2 > x1):
-                    start = x1 + 1
-                    end = x2
-                else:
-                    start = x2 + 1
-                    end = x1
-                # If between (x1,y1) and (x2,y2) exits not epty cell - return False
-                for i in range(start, end):
-                    if self.GetAllocation(i, y1) != 0:
-                        return False
-                return True
-            return False
+            # In first condition we check if points don't make diagonal line
+            return (abs(x1 - x2) != abs(y1 - y2)) and self.CheckLine(x1, y1, x2, y2)
         # Horse case
         if figure.kind == 2:
             dx = abs(x1 - x2)
@@ -129,30 +102,14 @@ class Board:
             return (dx and dy and (dx + dy == 3))
         # Officer case
         if figure.kind == 3:
-            # If moving isn't diagonally
-            if abs(x1 - x2) != abs(y1 - y2):
-                return False
-            # Need to check if line between (x1, y1) and (x2, y2) is free, as in case with tower
-            # Vectors of moving from (x1, y1) and (x2, y2)
-            vx = 1 if x2 > x1 else -1
-            vy = 1 if y2 > y1 else -1
-            x = x1
-            y = y1
-            for i in range(1, abs(x1 - x2)):
-                # Next point on line
-                x += vx
-                y += vy
-                # If point isn't empty: return false
-                if self.GetAllocation(x, y) != 0:
-                    return False
-            return True
+            # In first condition we check if points make diagonal line
+            return (abs(x1 - x2) == abs(y1 - y2)) and self.CheckLine(x1, y1, x2, y2)
         # Queen case
         if figure.kind == 4:
-            if (x1 == x2) or (y1 == y2) or (abs(x1 - x2) == abs(y1 - y2)):
-                return self.CheckLine(x1, y1, x2, y2)
-            return False
+            return self.CheckLine(x1, y1, x2, y2)
         # King case
         if figure.kind == 5:
+            # For queen CheckLine method just check if points make empty line
             return (abs(x1 - x2) <= 1 and abs(y1 -y2) <= 1)
         # Actually, this return needless, just for code culture
         return False
@@ -184,7 +141,11 @@ class Board:
 
     # Return True if line between (x1, y1) and (x2, y2) defined correctly and is empty
     def CheckLine(self, x1, y1, x2, y2):
+        # In this function we moving through line (if it's really line) and check her points on allocation
+        # vx and vy define steps of moving by line for X and Y axises respective
+        # Here we apply vector-parametric definition of the line
         if x1 == x2:
+            # This block will skiped, if function called for officer
             vy = 1 if y2 > y1 else -1
             x = x1
             y = y1
@@ -194,6 +155,7 @@ class Board:
                     return False
             return True
         if y1 == y2:
+            # This block will skiped, if function called for officer
             vx = 1 if x2 > x1 else -1
             x = x1
             y = y1
@@ -203,6 +165,7 @@ class Board:
                     return False
             return True
         if abs(x1 - x2) == abs(y1 - y2):
+            # This block will skiped, if function called for tower
             vx = 1 if x2 > x1 else -1
             vy = 1 if y2 > y1 else -1
             x = x1
@@ -213,6 +176,7 @@ class Board:
                 if self.GetAllocation(x,y) != 0:
                     return False
             return True
+        # Return False, if points don't make line
         return False
 
     # Logic for restarting or running first game
@@ -338,5 +302,4 @@ Board = Board()
 # Since we didn't render all objects inside Board initializing
 # And now we just testing - we need to run mainloop outside the Board class
 
-#Board.Player2.figures[(0,0)].SetPosition(3,3)
 Board.root.mainloop()
