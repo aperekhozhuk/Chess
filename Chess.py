@@ -275,7 +275,7 @@ class Figure:
     def Activate(self):
         board = self.player.board
         size = board.cellSize
-        board.mark = board.canvas.create_rectangle(self.x * size, self.y * size,
+        board.mark_id = board.canvas.create_rectangle(self.x * size, self.y * size,
             (self.x + 1) * size, (self.y + 1) * size, outline = board.mark_color, width = board.mark_width)
 
     # Remove highliting for activated figure
