@@ -297,6 +297,13 @@ class Figure:
         # Update cooordinates
         self.x = x
         self.y = y
+        # If figure is infantry and reaches  last row - make it Queen
+        # Need to optimize in future, bcd now we firstly move old figure to new position
+        # And after - redraw it - so expensive
+        if self.kind == 0 and self.y == self.side * 7:
+            self.kind = 4
+            self.player.board.canvas.delete(self.id)
+            self.Draw()
         # Tell that Player already made first step
         self.isFirstStepDone = True
         # Remove highlighting
