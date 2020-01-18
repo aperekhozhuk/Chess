@@ -223,6 +223,8 @@ class Player:
         self.side = side
         self.board = board
         self.figures = {}
+        # We store King's coords for faster access to it
+        self.king = (4, 7 * (1 - self.side))
         self.SetFigures()
 
     # Draws Player's Figures on Board.
@@ -243,6 +245,43 @@ class Player:
         self.figures[(3, j)] = Figure(self, 4, self.side, 3, j)
         # Drawing of King
         self.figures[(4, j)] = Figure(self, 5, self.side, 4, j)
+
+    # Returns instance of Player's opponent
+    def GetOpponent(self):
+        return self.board.Players[1 - self.side]
+
+    # Returns list of enemies that can attack the king
+    def GetKingAttackers(self):
+        opponent = self.GetOpponent()
+        attackers = []
+        for key, figure in opponent.figures.items():
+            # Infantry case
+            if figure.kind == 0:
+                if (abs(figure.x - self.king[0]) == 1) and ((self.king[1] - figure.y) == 1 - 2 * self.side):
+                    attackers.append(figure)
+            # Tower case
+            if figure.kind == 1:
+                # If line between tower and king is not diagonal
+                if abs(figure.x - self.king[0]) != abs(figure.y - self.king[1]):
+                    if self.board.CheckLine(figure.x, figure.y, *self.king):
+                        attackers.append(figure)
+            # Horse case
+            if figure.kind == 2:
+                dx = abs(figure.x - self.king[0])
+                dy = abs(figure.y - self.king[1])
+                if (dx and dy and (dx + dy == 3)):
+                    attackers.append(figure)
+            # Officer case
+            if figure.kind == 3:
+                # If line between tower and king is diagonal
+                if abs(figure.x - self.king[0]) == abs(figure.y - self.king[1]):
+                    if self.board.CheckLine(figure.x, figure.y, *self.king):
+                        attackers.append(figure)
+            # Queen case
+            if figure.kind == 4:
+                if self.board.CheckLine(figure.x, figure.y, *self.king):
+                    attackers.append(figure)
+        return attackers
 
     # Cleans all Players's Figures from Board
     def CleanFigures(self):
@@ -297,6 +336,9 @@ class Figure:
         # Update cooordinates
         self.x = x
         self.y = y
+        # If this move was made by king - update his coordinates
+        if self.kind == 5:
+            self.player.king = (x, y)
         # If figure is infantry and reaches  last row - make it Queen
         # Need to optimize in future, bcd now we firstly move old figure to new position
         # And after - redraw it - so expensive
