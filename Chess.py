@@ -271,6 +271,10 @@ class Player:
         opponent = self.GetOpponent()
         attackers = []
         for key, figure in opponent.figures.items():
+            # If king and figure sta on same position - figure can't attack
+            # Looks dummy, but it need to CheckMate method
+            if (figure.x, figure.y) == self.king:
+                continue
             # Infantry case
             if figure.kind == 0:
                 if (abs(figure.x - self.king[0]) == 1) and ((self.king[1] - figure.y) == 1 - 2 * self.side):
@@ -308,7 +312,30 @@ class Player:
         return bool(self.GetKingAttackers())
 
     def IsCheckMate(self):
-        return False
+        retreat_pos = []
+        b1, b2 = self.king
+        # broot force of all possible moves of king
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if abs(i) + abs(j) == 0:
+                    continue
+                x = self.king[0] + i
+                y = self.king[1] + j
+                # If (x, y) lies on board and not allocated by own figure
+                if x >= 0 and x <= 7 and y >= 0 and y <= 7 and (self.board.GetAllocation(x, y) != -1):
+                    # If king can move to (x, y) without Check - No checkmate!
+                    self.king = (x, y)
+                    if not self.IsCheck():
+                        retreat_pos.append((x + 1,y + 1))
+                        # restore king coords
+                        #return False
+                    self.king = (b1, b2)
+        print(retreat_pos)
+        if retreat_pos:
+            return False
+        # Now just for test - we suppose that if king can't move - it check mate
+        # Left to do checking ability to kill attackers or cover king from their
+        return True
 
 class Figure:
     # Initializating of figure, it takes kind of figure and side, and coordinates on Board
@@ -372,6 +399,13 @@ class Figure:
         self.isFirstStepDone = True
         # Remove highlighting
         self.Deactivate()
+
+    # Draw-less step - need to test ways to retreat of fing
+    def TempMove(self, x, y):
+        del self.player.figures[(self.x, self.y)]
+        self.x = x
+        self.y = y
+        self.player.figures[(x,y)] = self
 
     # Removes Figure from canvas and from Player's figures list
     def Remove(self):
