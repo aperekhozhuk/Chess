@@ -15,8 +15,6 @@ class Board:
         self.canvas.pack()
         self.canvas.bind('<Button-1>',self.Click())
         self.root.bind('<Return>',self.NewGameEventHandler())
-        # Label for showing message about result of game
-        self.alert = None
         # Mark for active figure
         self.mark_id = None
         # mark color and width
@@ -24,10 +22,14 @@ class Board:
         self.mark_width = self.cellSize // 20
         # Colors for cells background
         self.cellBg = ('bisque', 'brown')
+        self.alert_color = 'DodgerBlue'
         # Images of figures
         self.resources = [[], []]
         # Drawing Board
         self.drawBoard()
+        # Label for showing messages
+        self.alert = self.canvas.create_text(self.size // 2, self.size // 2, fill=self.alert_color,
+                        font="Times {} bold".format(self.size // 10), text="")
         # Loading images
         self.LoadResources()
         # Global game vars
@@ -36,6 +38,8 @@ class Board:
         self.Players = (0,1)
         self.ActivePlayer = None
         self.ActiveFigure = None
+        # True if game started, switches to False when checkmate happens
+        self.GameOn = False
         # Starting first game
         self.NewGame()
         # Starting window process. Upd: to early to start mainloop. Firstly we need to render all objects
@@ -122,6 +126,9 @@ class Board:
     # Invokes, when user clicks on board
     def Click(self):
         def _Click(event):
+            if not self.GameOn:
+                return
+            self.canvas.itemconfig(self.alert, text = "")
             # Calculate position of clicked Cell
             i, j = self.GetCell(event.x, event.y)
             # If we cliced on one of Active Player's figures:
@@ -139,6 +146,13 @@ class Board:
                     # If Active figure can make move to (i,j) position - then run next block
                     if self.MoveIsPossible(i, j):
                         self.Players[self.ActivePlayer].figures[self.ActiveFigure].SetPosition(i, j)
+                        if self.GetUnActivePlayer().IsCheck():
+                            message = "Check"
+                            if self.GetUnActivePlayer().IsCheckMate():
+                                self.GameOn = False
+                                message += "Mate"
+                            self.canvas.tag_raise(self.alert)
+                            self.canvas.itemconfig(self.alert, text = message)
                         # Change Active Player to opposite
                         self.ActivePlayer = abs(1 - self.ActivePlayer)
                         self.ActiveFigure = None
@@ -195,6 +209,8 @@ class Board:
         self.Players = (self.Player1, self.Player2)
         self.ActivePlayer = 0
         self.ActiveFigure = None
+        self.GameOn = True
+        self.canvas.itemconfig(self.alert, text = "")
 
     # Wrapper, event handler, that runs NewGame function, when Enter pressed
     def NewGameEventHandler(self):
@@ -287,6 +303,12 @@ class Player:
     def CleanFigures(self):
         for key, figure in self.figures.items():
             self.board.canvas.delete(figure.id)
+
+    def IsCheck(self):
+        return bool(self.GetKingAttackers())
+
+    def IsCheckMate(self):
+        return False
 
 class Figure:
     # Initializating of figure, it takes kind of figure and side, and coordinates on Board
