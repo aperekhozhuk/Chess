@@ -331,11 +331,45 @@ class Player:
                         #return False
                     self.king = (b1, b2)
         print(retreat_pos)
+        # If king can retreat - so it's not check! Hurray!
         if retreat_pos:
             return False
-        # Now just for test - we suppose that if king can't move - it check mate
-        # Left to do checking ability to kill attackers or cover king from their
+        attackers = self.GetKingAttackers()
+        # If king attacked by 2 figures - sorry, but it's checkmate!
+        if len(attackers) > 1:
+            return True
+        attacker = attackers[0]
+        # If exits figure that can hit attacker - great, its not checkmate
+        for x in self.figures:
+            if x.CanHit(attacker):
+                return False
+        # So, now - we only have chance to save king if we will set some figure on
+        # position between king and attacker
+
+        # We can't cover king from horse()
+        # Also, very hard moment: if attacker is infantry:
+        #   so we don't have figure that can hit it (king can't hit to) - it was checked early
+        #   and Infantry stays in zero distance from king - so we can't cover king - CheckMate
+        if attacker.kind == 2 or attacker.kind == 0:
+            return True
+        x1, y1 = attacker.x, attacker.y1
+        x2, y2 = self.king
+        # We need to check line between (x1, y1) and (x2, y2) - if on it line exists point, which
+        # can be settled by one of player's figures. If so - hurray, it's not CheckMate, else - it is
+        v1 = 1 if x2 > x1 else -1
+        v2 = 1 if y2 > y1 else -1
+        for i in range(1, abs(x1 - x2)):
+            x = x1 + v1
+            y = y1 + v2
+            if self.CanSettle(x,y):
+                return False
         return True
+
+        def CanHit(self, attacker):
+            return False
+
+        def CanSettle(self, x, y):
+            return False
 
 class Figure:
     # Initializating of figure, it takes kind of figure and side, and coordinates on Board
